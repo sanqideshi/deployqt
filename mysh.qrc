@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>deploy.sh</file>
+        <file>qt.conf.template</file>
+    </qresource>
+</RCC>
