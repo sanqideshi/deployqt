@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(deploy_qt LANGUAGES CXX)
+project(deployqt LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -14,10 +14,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core REQUIRED)
 
-add_executable(deploy_qt
+add_executable(deployqt
   main.cpp
   cmdutil.cpp
   cmdutil.h
   mysh.qrc
+  packager.h
+  packager.cpp
+  watchor.h
+  watchor.cpp
+  collectthread.h
+  collectthread.cpp
+  controlthread.h controlthread.cpp
+  Arch.h
 )
-target_link_libraries(deploy_qt Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(deployqt Qt${QT_VERSION_MAJOR}::Core)

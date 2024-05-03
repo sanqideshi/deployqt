@@ -10,11 +10,11 @@
 #include <QCommandLineParser>
 #include <QThread>
 #include <QProcess>
-enum ArchEnum{
-  X86_64,
-  aarch64
-};
-int main1(int argc, char *argv[])
+#include "packager.h"
+
+
+
+int main2(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     QCoreApplication::setSetuidAllowed(true);
@@ -24,21 +24,25 @@ int main1(int argc, char *argv[])
     QString workDirectorty = QCoreApplication::applicationDirPath();
 
     QCommandLineParser parser;
-    QCommandLineOption option1("path");
-    option1.setDescription("设置位置");
-    option1.setValueName("path");
-    parser.setSingleDashWordOptionMode(QCommandLineParser::SingleDashWordOptionMode::ParseAsLongOptions);
-    parser.addOption(option1);
+    parser.addHelpOption();
+    QCommandLineOption pathOption(QStringList() << "p" << "path","设置app位置","path");
+    parser.addOption(pathOption);
+    QCommandLineOption pidOption(QStringList() << "P" << "pid","设置进程id,P为大写","pid");
+    parser.addOption(pidOption);
 
-    parser.parse(a.arguments());
 
-    if(!parser.isSet(option1)){
+    parser.process(a);
+
+
+    //parser.parse(a.arguments());
+
+    if(!parser.isSet(pathOption)){
         qDebug() << "请输入必要的参数，如：--path /your/app/path";
         a.exit();
         return 0;
     }
 
-    QString appPathStr = parser.value(option1);
+    QString appPathStr = parser.value(pathOption);
     QFileInfo appPath(appPathStr);
     if(!appPath.exists()){
         qDebug() << "没有对应的文件";
@@ -65,9 +69,7 @@ int main1(int argc, char *argv[])
 
     QString applicationName = appPath.fileName();
 
-    QString pidStr = QString::fromLatin1("ps aux | grep %1 | grep -v grep | grep -v deploy_qt| awk '{print $2}'").arg(applicationName);
-
-
+    QString pidStr = QString::fromLatin1("ps aux | grep %1 | grep -v grep | grep -v %2| awk '{print $2}'").arg(applicationName).arg(a.applicationName());
 
     CmdUtil::execShell(workDirectorty,pidStr,output,error);
     QString pid = output;
@@ -153,6 +155,7 @@ int main1(int argc, char *argv[])
     if(arch == ArchEnum::aarch64){
         archPrefix = "aarch64-linux-gnu";
     }
+
     //复制libqxcb.so
     CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%2/qt5/plugins/platforms/libqxcb.so %1/plugins/platforms/").arg(outputPath).arg(archPrefix),output,error);
     //复制libpthread.so.0 librt.so.1
@@ -169,18 +172,40 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    QProcess process;
-    QStringList params;
-    process.start("ls",QStringList() << "-l");
-    process.waitForStarted();
-    process.waitForFinished();
-    process.waitForReadyRead();
+    QCoreApplication::setSetuidAllowed(true);
 
-    qDebug() << process.readAllStandardOutput();
-    process.start("ls",QStringList() << "-l");
-    process.waitForFinished();
-    qDebug() << process.readAllStandardOutput();
-    process.close();
+    QString qtDir = QLibraryInfo::location(QLibraryInfo::ArchDataPath);
+    QString qtLibsDir =  QLibraryInfo::location(QLibraryInfo::LibrariesPath);
+    QString workDirectorty = QCoreApplication::applicationDirPath();
+
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    QCommandLineOption pathOption(QStringList() << "p" << "path","设置app位置","path");
+    parser.addOption(pathOption);
+    QCommandLineOption pidOption(QStringList() << "P" << "pid","设置进程id,P为大写","pid");
+    parser.addOption(pidOption);
+    QCommandLineOption qmlOption(QStringList() << "q" << "qml","设置qml路径","0|1");
+    parser.addOption(qmlOption);
+    parser.process(a);
+
+    if(!parser.isSet(pathOption)){
+        qDebug() << "请输入必要的参数，如：--path /your/app/path";
+        a.exit();
+        return 0;
+    }
+
+    QString appPathStr = parser.value(pathOption);
+    QFileInfo appPath(appPathStr);
+    if(!appPath.exists()){
+        qDebug() << "没有对应的文件";
+        a.exit();
+        return 0;
+    }
+
+    Packager packager(appPath);
+    QStringList qmlPaths = parser.values(qmlOption);
+    packager.setQmlPaths(qmlPaths);
+    packager.watchPack();
 
     return a.exec();
 }

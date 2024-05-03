@@ -18,12 +18,12 @@ bool CmdUtil::exec(QString cmd,QString &standard,QString &error)
     process.waitForReadyRead();
     //QString errorStr = process.errorString();
 
-    if(process.error()== QProcess::ProcessError::UnknownError){
-        standard = process.readAllStandardOutput();
+    error = process.readAllStandardError();
+    if(error== ""){
+        standard = process.readAll();
         process.close();
         return true;
     }else{
-        error = process.readAllStandardError();
         process.close();
         return false;
     }
@@ -44,12 +44,12 @@ bool CmdUtil::exec(QString workDirectorty, QString cmd, QString &standard, QStri
     process.waitForReadyRead();
     //QString errorStr = process.errorString();
 
-    if(process.error()== QProcess::ProcessError::UnknownError){
-        standard = process.readAllStandardOutput();
+    error = process.readAllStandardError();
+    if(error== ""){
+        standard = process.readAll();
         process.close();
         return true;
     }else{
-        error = process.readAllStandardError();
         process.close();
         return false;
     }

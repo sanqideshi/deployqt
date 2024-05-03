@@ -9,5 +9,5 @@ dirname=$PWD/$dirname
 fi
 LD_LIBRARY_PATH=$dirname/lib
 export LD_LIBRARY_PATH
-export QT_QPA_PLATFORM_PLUGIN_PATH=./plugins/platforms
+#export QT_QPA_PLATFORM_PLUGIN_PATH=./plugins/platforms
 $dirname/$appname "$@"
