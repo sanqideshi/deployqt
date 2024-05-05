@@ -62,17 +62,17 @@ void Packager::watchPack(QString pid)
     QThread::sleep(2);
 
    connect(&controlThread,&ControlThread::mstop,this,[=](){
-       qDebug() << QObject::tr("collectthread is stoped");
+       qDebug() << "collectthread is stoped";
        collectthread.setFlag(false);
    });
    connect(&collectthread,&CollectThread::collect,this,[=](){
-       qDebug() << QObject::tr("collect");
+       qDebug() << "collect";
        QString plddStr = getPlddApp(pid);
 
        collectSo(plddStr);
    });
    connect(&collectthread,&CollectThread::finished,this,[=](){
-       qDebug() << QObject::tr("finished");
+       qDebug() << "finished";
        QString output,error;
        CmdUtil::execShell(QString::fromLatin1("kill -9 %1").arg(pid),output,error);
        copySo();

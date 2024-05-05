@@ -28,4 +28,5 @@ add_executable(deployqt
   controlthread.h controlthread.cpp
   Arch.h
 )
+
 target_link_libraries(deployqt Qt${QT_VERSION_MAJOR}::Core)
