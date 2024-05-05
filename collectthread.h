@@ -8,7 +8,7 @@ class CollectThread:public QThread
 {
     Q_OBJECT
 public:
-    CollectThread();
+    explicit CollectThread();
     bool getFlag() const;
     void setFlag(bool newFlag);
 signals:

@@ -11,8 +11,14 @@ Packager::Packager(QFileInfo appPath,QObject *parent)
     : QObject{parent},appPath(appPath)
 {
     thisAppName = QCoreApplication::applicationName();
+#if (QT_VERSION >= 0x050000 && QT_VERSION<0x060000)
     qtDir = QLibraryInfo::location(QLibraryInfo::ArchDataPath);
     qtLibsDir =  QLibraryInfo::location(QLibraryInfo::LibrariesPath);
+#endif
+#if (QT_VERSION >= 0x060000)
+    qtDir = QLibraryInfo::path(QLibraryInfo::ArchDataPath);
+    qtLibsDir =  QLibraryInfo::path(QLibraryInfo::LibrariesPath);
+#endif
 
     appName = appPath.fileName();
     outputPath = "./output/"+appName+"/";
@@ -26,7 +32,8 @@ void Packager::pathPack()
     QString plddStr = getPlddApp(pid);
     soPaths = QSharedPointer<QSet<QString>>(new QSet<QString>());
     collectSo(plddStr);
-
+    QString output,error;
+    CmdUtil::execShell(QString::fromLatin1("kill -9 %1").arg(pid),output,error);
     copySo();
     copyQml();
     copyExtraFiles(arch);
@@ -35,49 +42,53 @@ void Packager::pathPack()
     makeFiles();
     soPaths->clear();
 
-    QString output,error;
-    CmdUtil::execShell(QString::fromLatin1("kill -9 %1").arg(pid),output,error);
-
     chmodX();
-
 }
 
 
 
 void Packager::watchPack()
 {
-     ArchEnum arch = getArch();
+     //ArchEnum arch = getArch();
      runApp(appPath.absoluteFilePath());
      QString pid =  getPid();
-     soPaths = QSharedPointer<QSet<QString>>(new QSet<QString>());
-     QThread::sleep(2);
+     watchPack(pid);
+}
 
-    connect(&controlThread,&ControlThread::mstop,this,[=](){
-        qDebug() << "collectthread is stoped";
-        collectthread.setFlag(false);
-    });
-    connect(&collectthread,&CollectThread::collect,this,[=](){
-        qDebug() << "collect";
-        QString plddStr = getPlddApp(pid);
-        qDebug() << "plddStr:" << plddStr;
-        collectSo(plddStr);
-    });
-    connect(&collectthread,&CollectThread::finished,this,[=](){
-        qDebug() << "finished";
-        copySo();
-        copyQml();
-        copyExtraFiles(arch);
-        patchelf(arch);
+void Packager::watchPack(QString pid)
+{
+    ArchEnum arch = getArch();
+    soPaths = QSharedPointer<QSet<QString>>(new QSet<QString>());
+    QThread::sleep(2);
 
-        makeFiles();
-        soPaths->clear();
+   connect(&controlThread,&ControlThread::mstop,this,[=](){
+       qDebug() << QObject::tr("collectthread is stoped");
+       collectthread.setFlag(false);
+   });
+   connect(&collectthread,&CollectThread::collect,this,[=](){
+       qDebug() << QObject::tr("collect");
+       QString plddStr = getPlddApp(pid);
 
-        QString output,error;
-        CmdUtil::execShell(QString::fromLatin1("kill -9 %1").arg(pid),output,error);
-        chmodX();
-    });
-    controlThread.start();
-    collectthread.start();
+       collectSo(plddStr);
+   });
+   connect(&collectthread,&CollectThread::finished,this,[=](){
+       qDebug() << QObject::tr("finished");
+       QString output,error;
+       CmdUtil::execShell(QString::fromLatin1("kill -9 %1").arg(pid),output,error);
+       copySo();
+       copyQml();
+       copyExtraFiles(arch);
+       patchelf(arch);
+
+       makeFiles();
+       soPaths->clear();
+
+
+       chmodX();
+   });
+   controlThread.start();
+   collectthread.start();
+
 }
 
 void Packager::setQmlPaths(QStringList qmlPaths)
@@ -203,9 +214,10 @@ void Packager::collectSo(QString plddStr)
             continue;
         }
         //真实so文件
-        QString realLib = fileInfo.canonicalFilePath();
+        //QString realLib = fileInfo.canonicalFilePath();
+        QString realLib = fileInfo.filePath();
         if(!soPaths->contains(realLib)){
-            qDebug() << "realLib:" <<realLib;
+            qDebug() << "realLib add:" <<realLib;
             soPaths->insert(realLib);
         }
 
@@ -219,9 +231,14 @@ void Packager::copySo()
     QList<QString> list = soPaths->values();
 
     QDir dir;
+    dir.mkpath(outputPath+"./lib/opt");
     //QString outputPath = getOutputPath();
     for(int i=2;i<list.size();i++){
         QString realLib = list.at(i);
+
+        if(realLib.startsWith("/lib")){
+            realLib = realLib.replace(0,4,"/usr/lib");
+        }
         qDebug()<<"realLib:" <<realLib;
         QFileInfo fileInfo(realLib);
         bool isQtLibPrefix = realLib.startsWith(qtLibsDir);
@@ -245,6 +262,9 @@ void Packager::copySo()
             dir.mkpath(outputPath + "./lib");
             QString newName =outputPath + "./lib/" + fileName;
 
+            QFile::copy(realLib,newName);
+        }else {
+            QString newName =outputPath + "./lib/opt/" + fileName;
             QFile::copy(realLib,newName);
         }
         //delete realLib;
@@ -273,14 +293,29 @@ void Packager::patchelf(ArchEnum arch)
 {
 
     QString ldName,output,error;
+    QString archPrefix;
+    if(arch == ArchEnum::X86_64){
+        archPrefix = "x86_64-linux-gnu";
+    }
+    if(arch == ArchEnum::aarch64){
+        archPrefix = "aarch64-linux-gnu";
+    }
+
     if(arch == ArchEnum::X86_64){
         ldName = "ld-linux-x86-64.so.2";
     }
     if(arch == ArchEnum::aarch64){
         ldName = "ld-linux-aarch64.so.1";
     }
+
+    //复制ld-linux-xxx到目录
+    CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
     CmdUtil::execShell("patchelf --set-rpath ./lib " + outputPath+appName,output,error);
+    qDebug() << "output:" <<output;
+    qDebug() << "error:" <<error;
     CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./lib/%1 %2").arg(ldName).arg(outputPath+appName),output,error);
+    qDebug() << "output2:" <<output;
+    qDebug() << "error2:" <<error;
 }
 
 void Packager::makeFiles()

@@ -14,7 +14,8 @@ class Packager : public QObject
 public:
     explicit Packager(QFileInfo appPath,QObject *parent = nullptr);
     void pathPack();
-    void watchPack( );
+    void watchPack();
+    void watchPack(QString pid);
 
     void setQmlPaths(QStringList qmlPaths);
     ControlThread controlThread;
@@ -60,6 +61,7 @@ private:
 
     void makeFiles();
     void copyQml();
+    void chmodX();
 
 
 signals:

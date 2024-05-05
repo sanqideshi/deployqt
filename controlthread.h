@@ -8,7 +8,7 @@ class ControlThread:public QThread
 {
     Q_OBJECT
 public:
-    ControlThread();
+    explicit ControlThread();
     bool getIsExit() const;
     void setIsExit(bool newIsExit);
 signals:
