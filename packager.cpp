@@ -8,7 +8,7 @@
 #include <QCoreApplication>
 #include <QLibraryInfo>
 Packager::Packager(QFileInfo appPath,QObject *parent)
-    : QObject{parent},appPath(appPath)
+    : QObject{parent},appPath(appPath),hasExec(false)
 {
     thisAppName = QCoreApplication::applicationName();
 #if (QT_VERSION >= 0x050000 && QT_VERSION<0x060000)
@@ -43,6 +43,7 @@ void Packager::pathPack()
     soPaths->clear();
 
     chmodX();
+    QCoreApplication::exit(0);
 }
 
 
@@ -85,6 +86,8 @@ void Packager::watchPack(QString pid)
 
 
        chmodX();
+
+       QCoreApplication::exit(0);
    });
    controlThread.start();
    collectthread.start();
@@ -93,8 +96,17 @@ void Packager::watchPack(QString pid)
 
 void Packager::setQmlPaths(QStringList qmlPaths)
 {
-
     this->qmlPaths = qmlPaths;
+}
+
+bool Packager::getHasExec() const
+{
+    return hasExec;
+}
+
+void Packager::setHasExec(bool newHasExec)
+{
+    hasExec = newHasExec;
 }
 
 const QString &Packager::getThisAppName() const
@@ -159,7 +171,7 @@ ArchEnum Packager::getArch()
         arch = ArchEnum::X86_64;
     }
 
-    if(output.contains("arm64")){
+    if(output.contains("aarch64")){
         arch = ArchEnum::aarch64;
     }
     return arch;
@@ -283,10 +295,10 @@ void Packager::copyExtraFiles(ArchEnum arch)
     //复制传入的app
     CmdUtil::execShell("cp -f "+appPath.absoluteFilePath()+ " " + outputPath,output,error);
     //复制libqxcb.so
-    CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%2/qt5/plugins/platforms/libqxcb.so %1/plugins/platforms/").arg(outputPath).arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/qt5/plugins/platforms/libqxcb.so %1/plugins/platforms/").arg(outputPath).arg(archPrefix),output,error);
     //复制libpthread.so.0 librt.so.1
-    CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%2/libpthread.so.0 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
-    CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%2/librt.so.1 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/libpthread.so.0 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/librt.so.1 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
 }
 
 void Packager::patchelf(ArchEnum arch)
@@ -309,13 +321,11 @@ void Packager::patchelf(ArchEnum arch)
     }
 
     //复制ld-linux-xxx到目录
-    CmdUtil::execShell(QString::fromLatin1("cp -f /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
+    //CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath),output,error);
     CmdUtil::execShell("patchelf --set-rpath ./lib " + outputPath+appName,output,error);
-    qDebug() << "output:" <<output;
-    qDebug() << "error:" <<error;
-    CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./lib/%1 %2").arg(ldName).arg(outputPath+appName),output,error);
-    qDebug() << "output2:" <<output;
-    qDebug() << "error2:" <<error;
+    //CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./lib/%1 %2").arg(ldName).arg(outputPath+appName),output,error);
+    CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./%1 %2").arg(ldName).arg(outputPath+appName),output,error);
 }
 
 void Packager::makeFiles()
@@ -366,4 +376,10 @@ void Packager::chmodX()
 {
     QString output,error;
     CmdUtil::execShell(QString::fromLatin1("chmod a+x %1").arg(outputPath + appPath.fileName()+".sh"),output,error);
+}
+
+void Packager::cpExec()
+{
+    QString output,error;
+    CmdUtil::execShell(QString::fromLatin1("cp -rf %1 %2").arg(qtDir+"/libexec/").arg(outputPath),output,error);
 }

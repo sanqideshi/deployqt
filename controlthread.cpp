@@ -24,6 +24,7 @@ void ControlThread::run()
         if(qstr == "stop"){
             //setIsExit(true);
             emit mstop();
+            break;
         }
         msleep(2000);
     }

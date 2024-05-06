@@ -12,26 +12,9 @@
 #include "packager.h"
 #include "cmdutil.h"
 
-
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QString output,error;
-
-    CmdUtil::execShell("whoami",output,error);
-    if(output!="root\n"){
-        qDebug() << output;
-        qDebug() << "请在root下运行";
-        app.exit();
-        return 0;
-    }
-    CmdUtil::execShell("which patchelf",output,error);
-    if(output==""){
-        qDebug() << "which patchelf" << output;
-        qDebug() << "请安装patchelf后再运行";
-        app.exit();
-        return 0;
-    }
 
 
     QCoreApplication::setSetuidAllowed(true);
@@ -56,6 +39,8 @@ int main(int argc, char *argv[])
     parser.addOption(qmlOption);
     QCommandLineOption watchOption("watch","运行时动态收集so");
     parser.addOption(watchOption);
+    QCommandLineOption execOption("exec","时候运行了libexec下的进程");
+    parser.addOption(execOption);
     parser.process(app);
 
     if(!parser.isSet(pathOption)){
@@ -72,9 +57,36 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+
+
+    QString output,error;
+
+    CmdUtil::execShell("whoami",output,error);
+    if(output!="root\n"){
+        qDebug() << output;
+        qDebug() << "请在root下运行";
+        app.exit();
+        return 0;
+    }
+    CmdUtil::execShell("which patchelf",output,error);
+    if(output==""){
+        qDebug() << "which patchelf" << output;
+        qDebug() << "请安装patchelf后再运行";
+        app.exit();
+        return 0;
+    }
+
+
+
+
     Packager packager(appPath);
     QStringList qmlPaths = parser.values(qmlOption);
     packager.setQmlPaths(qmlPaths);
+
+    if(parser.isSet(execOption)){
+        packager.setHasExec(true);
+    }
+
     if(parser.isSet(watchOption)){
         packager.watchPack();
     }else if(parser.isSet(pidOption)){
@@ -82,6 +94,5 @@ int main(int argc, char *argv[])
     }else {
         packager.pathPack();
     }
-
     return app.exec();
 }

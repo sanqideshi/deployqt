@@ -22,6 +22,9 @@ public:
     CollectThread collectthread;
 
 
+    bool getHasExec() const;
+    void setHasExec(bool newHasExec);
+
 private:
     QStringList qmlPaths;
     QString thisAppName;
@@ -31,6 +34,7 @@ private:
     QString qtDir;
     QSharedPointer<QSet<QString>> soPaths;
     QString outputPath;
+    bool hasExec;
 
     const QString &getAppName() const;
     void setAppName(const QString &newAppName);
@@ -62,7 +66,7 @@ private:
     void makeFiles();
     void copyQml();
     void chmodX();
-
+    void cpExec();
 
 signals:
 
