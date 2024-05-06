@@ -293,12 +293,12 @@ void Packager::copyExtraFiles(ArchEnum arch)
         archPrefix = "aarch64-linux-gnu";
     }
     //复制传入的app
-    CmdUtil::execShell("cp -f "+appPath.absoluteFilePath()+ " " + outputPath,output,error);
+    CmdUtil::execShell("cp -rfL "+appPath.absoluteFilePath()+ " " + outputPath,output,error);
     //复制libqxcb.so
-    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/qt5/plugins/platforms/libqxcb.so %1/plugins/platforms/").arg(outputPath).arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%2/qt5/plugins/platforms/libqxcb.so %1/plugins/platforms/").arg(outputPath).arg(archPrefix),output,error);
     //复制libpthread.so.0 librt.so.1
-    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/libpthread.so.0 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
-    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%2/librt.so.1 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%2/libpthread.so.0 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%2/librt.so.1 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
 }
 
 void Packager::patchelf(ArchEnum arch)
@@ -321,8 +321,8 @@ void Packager::patchelf(ArchEnum arch)
     }
 
     //复制ld-linux-xxx到目录
-    //CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
-    CmdUtil::execShell(QString::fromLatin1("cp -rf /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath),output,error);
+    //CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath),output,error);
     CmdUtil::execShell("patchelf --set-rpath ./lib " + outputPath+appName,output,error);
     //CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./lib/%1 %2").arg(ldName).arg(outputPath+appName),output,error);
     CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./%1 %2").arg(ldName).arg(outputPath+appName),output,error);
@@ -365,10 +365,10 @@ void Packager::copyQml()
     QString output,error;
     QDir dir;
     dir.mkpath(outputPath+"./qml");
-    qDebug() << "copyQml : " <<QString::fromLatin1("cp -rf %1 %2").arg(qtDir+"/qml/*").arg(outputPath+"./qml/");
-    CmdUtil::execShell(QString::fromLatin1("cp -rf %1 %2").arg(qtDir+"/qml/*").arg(outputPath+"./qml/"),output,error);
+    qDebug() << "copyQml : " <<QString::fromLatin1("cp -rfL %1 %2").arg(qtDir+"/qml/*").arg(outputPath+"./qml/");
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL %1 %2").arg(qtDir+"/qml/*").arg(outputPath+"./qml/"),output,error);
     for(QString qmlPath: qmlPaths){
-        CmdUtil::execShell(QString::fromLatin1("cp -rf %1 %2").arg(qmlPath+"/*").arg(outputPath+"./qml/"),output,error);
+        CmdUtil::execShell(QString::fromLatin1("cp -rfL %1 %2").arg(qmlPath+"/*").arg(outputPath+"./qml/"),output,error);
     }
 }
 
@@ -381,5 +381,5 @@ void Packager::chmodX()
 void Packager::cpExec()
 {
     QString output,error;
-    CmdUtil::execShell(QString::fromLatin1("cp -rf %1 %2").arg(qtDir+"/libexec/").arg(outputPath),output,error);
+    CmdUtil::execShell(QString::fromLatin1("cp -rfL %1 %2").arg(qtDir+"/libexec/").arg(outputPath),output,error);
 }
