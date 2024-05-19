@@ -1,0 +1,12 @@
+{
+    cmdlines = {
+        "xmake build",
+        "xmake build",
+        "xmake build",
+        "xmake build",
+        "xmake build",
+        "xmake build",
+        "xmake ",
+        "xmake "
+    }
+}

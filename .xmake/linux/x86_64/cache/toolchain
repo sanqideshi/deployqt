@@ -1,0 +1,32 @@
+{
+    tool_target_deployqt_linux_x86_64_cxx = {
+        program = "/usr/bin/gcc",
+        toolname = "gcc",
+        toolchain_info = {
+            name = "gcc",
+            arch = "x86_64",
+            cachekey = "gcc_arch_x86_64_plat_linux",
+            plat = "linux"
+        }
+    },
+    tool_target_deployqt_linux_x86_64_ld = {
+        program = "/usr/bin/g++",
+        toolname = "gxx",
+        toolchain_info = {
+            name = "gcc",
+            arch = "x86_64",
+            cachekey = "gcc_arch_x86_64_plat_linux",
+            plat = "linux"
+        }
+    },
+    tool_platform_linux_x86_64_cxx = {
+        program = "/usr/bin/gcc",
+        toolname = "gcc",
+        toolchain_info = {
+            name = "gcc",
+            arch = "x86_64",
+            cachekey = "gcc_arch_x86_64_plat_linux",
+            plat = "linux"
+        }
+    }
+}
