@@ -61,7 +61,7 @@ bool CmdUtil::execShell(QString shell, QString &standard, QString &error)
     QProcess process;
     QStringList params;
     params << "-c" <<shell;
-    process.start("/usr/bin/bash",params);
+    process.start("bash",params);
 
     process.waitForStarted();
     process.waitForFinished();
@@ -86,7 +86,7 @@ bool CmdUtil::execShell(QString &workDirectorty, QString shell, QString &standar
     QStringList params;
     params << "-c" <<shell;
     process.setWorkingDirectory(workDirectorty);
-    process.start("/usr/bin/bash",params);
+    process.start("bash",params);
 
     process.waitForStarted();
     process.waitForFinished();

@@ -16,6 +16,7 @@ public:
     void pathPack();
     void watchPack();
     void watchPack(QString pid);
+    void packWithWenengine();
 
     void setQmlPaths(QStringList qmlPaths);
     ControlThread controlThread;

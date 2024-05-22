@@ -94,6 +94,12 @@ void Packager::watchPack(QString pid)
 
 }
 
+void Packager::packWithWenengine()
+{
+    watchPack();
+    cpExec();
+}
+
 void Packager::setQmlPaths(QStringList qmlPaths)
 {
     this->qmlPaths = qmlPaths;

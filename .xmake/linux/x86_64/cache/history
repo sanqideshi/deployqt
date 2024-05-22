@@ -1,31 +1,7 @@
 {
     cmdlines = {
-        "xmake build",
-        "xmake build",
-        "xmake build",
-        "xmake build",
-        "xmake build",
-        "xmake build",
-        "xmake ",
-        "xmake ",
-        "xmake f --menu",
-        "xmake f --menu",
-        "xmake f --menu",
-        "xmake ",
-        "xmake lua private.xrepo search libusb",
-        "xmake lua private.xrepo install libusb-v1.0.27",
-        "xmake lua private.xrepo install libusb",
-        "xmake ",
-        "xmake package",
-        "xmake package -f oldpkg",
-        "xmake ",
-        "xmake ",
-        "xmake l /home/sanqi/.vscode/extensions/tboox.xmake-vscode-2.3.5/assets/explorer.lua",
-        "xmake l /home/sanqi/.vscode/extensions/tboox.xmake-vscode-2.3.5/assets/config.lua",
-        "xmake l /home/sanqi/.vscode/extensions/tboox.xmake-vscode-2.3.5/assets/targets.lua",
-        "xmake f -p linux -a x86_64 -m release",
-        "xmake ",
-        "xmake l /home/sanqi/.vscode/extensions/tboox.xmake-vscode-2.3.5/assets/targets.lua",
-        "xmake l /home/sanqi/.vscode/extensions/tboox.xmake-vscode-2.3.5/assets/targets.lua"
+        "__macro_begin__",
+        "xmake m -e",
+        "__macro_end__"
     }
 }
