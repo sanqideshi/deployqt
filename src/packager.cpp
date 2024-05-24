@@ -10,10 +10,12 @@
 Packager::Packager(QFileInfo appPath,QObject *parent)
     : QObject{parent},appPath(appPath),hasExec(false)
 {
+    qDebug() << "Packager init ...";
     thisAppName = QCoreApplication::applicationName();
 #if (QT_VERSION >= 0x050000 && QT_VERSION<0x060000)
     qtDir = QLibraryInfo::location(QLibraryInfo::ArchDataPath);
     qtLibsDir =  QLibraryInfo::location(QLibraryInfo::LibrariesPath);
+    qtDataPath = QLibraryInfo::location(QLibraryInfo::DataPath);
 #endif
 #if (QT_VERSION >= 0x060000)
     qtDir = QLibraryInfo::path(QLibraryInfo::ArchDataPath);
@@ -22,6 +24,29 @@ Packager::Packager(QFileInfo appPath,QObject *parent)
 
     appName = appPath.fileName();
     outputPath = "./output/"+appName+"/";
+    outLibexecPath = outputPath +  "libexec";
+    outTranslationsPath = outputPath + "translations";
+    outResourcesPath =  outputPath + "resources";
+    outTranslationsPath2 = outputPath + "libexec/translations";
+    outResourcesPath2 =  outputPath + "libexec/resources";
+    qtLibexecPath =  qtDir + "/libexec";
+    qtResourcesPath = qtDataPath + "/resources";
+    qtTranslationsPath = qtDataPath + "/translations";
+    qDebug() << outputPath << Qt::endl;
+    qDebug() << outLibexecPath << Qt::endl;
+    qDebug() << outTranslationsPath << Qt::endl;
+    qDebug() << outResourcesPath << Qt::endl;
+    qDebug() << outTranslationsPath2 << Qt::endl;
+    qDebug() << outResourcesPath2 << Qt::endl;
+    qDebug() << qtLibexecPath << Qt::endl;
+    qDebug() << qtResourcesPath << Qt::endl;
+    qDebug() << qtTranslationsPath << Qt::endl;
+
+    connect(this,&Packager::exitSignal,this,[](){
+        qDebug() << "exitSignal";
+        QCoreApplication::exit(0);
+   });
+   
 }
 
 void Packager::pathPack()
@@ -37,13 +62,16 @@ void Packager::pathPack()
     copySo();
     copyQml();
     copyExtraFiles(arch);
-    patchelf(arch);
+    patchelf(arch,outputPath,appName);
 
     makeFiles();
     soPaths->clear();
 
     chmodX();
-    QCoreApplication::exit(0);
+    mvSo();
+    emit execWebengine();
+    //emit exitSignal();
+    //QCoreApplication::exit(0);
 }
 
 
@@ -51,16 +79,18 @@ void Packager::pathPack()
 void Packager::watchPack()
 {
      //ArchEnum arch = getArch();
-     runApp(appPath.absoluteFilePath());
-     QString pid =  getPid();
-     watchPack(pid);
+     runApp(appPath.absoluteFilePath()+ " ");
+     QString pids =  getPid();
+     QStringList pidArr = pids.split("\n");
+     qDebug() << "pid:" << pidArr[0];
+     watchPack(pidArr[0]);
 }
 
 void Packager::watchPack(QString pid)
 {
     ArchEnum arch = getArch();
     soPaths = QSharedPointer<QSet<QString>>(new QSet<QString>());
-    QThread::sleep(2);
+    
 
    connect(&controlThread,&ControlThread::mstop,this,[=](){
        qDebug() << "collectthread is stoped";
@@ -79,16 +109,18 @@ void Packager::watchPack(QString pid)
        copySo();
        copyQml();
        copyExtraFiles(arch);
-       patchelf(arch);
+       patchelf(arch,outputPath,appName);
 
        makeFiles();
        soPaths->clear();
 
 
        chmodX();
-
-       QCoreApplication::exit(0);
+        mvSo();
+        emit execWebengine();
+       //QCoreApplication::exit(0);
    });
+   
    controlThread.start();
    collectthread.start();
 
@@ -96,8 +128,56 @@ void Packager::watchPack(QString pid)
 
 void Packager::packWithWenengine()
 {
-    watchPack();
-    cpExec();
+     connect(this,&Packager::execWebengine,[=](){
+        qDebug() << "execWebengine";
+        ArchEnum arch = getArch();
+        QString output,error;
+        QDir dir;
+        dir.mkpath(outLibexecPath);
+        //dir.mkpath(outResourcesPath2);
+        //dir.mkpath(outTranslationsPath2);
+        dir.mkpath(outResourcesPath);
+        dir.mkpath(outTranslationsPath);
+        QString cpLibexec = QString::fromLatin1("cp -rfL %1 %2").arg(qtLibexecPath).arg(outputPath);
+        QString cpResources = QString::fromLatin1("cp -rfL %1 %2").arg(qtResourcesPath).arg(outputPath);
+        QString cpTranslations = QString::fromLatin1("cp -rfL %1 %2").arg(qtTranslationsPath).arg(outputPath);
+        
+        CmdUtil::execShell(cpLibexec,output,error);
+        CmdUtil::execShell(cpResources,output,error);
+        CmdUtil::execShell(cpTranslations,output,error);
+        
+        CmdUtil::execShell("ls " + qtLibexecPath,output,error);
+        qDebug()<< "libexec output:" << output;
+        QStringList libexecArr = output.split("\n");
+
+        for(auto libexec : libexecArr)
+        {
+            qDebug()<< "libexec:" << libexec;
+            if(libexec !=""){
+                patchelf(arch,outputPath+"libexec/",libexec);
+            }
+        }
+        //QString cpResources2 = QString::fromLatin1("cp -rfL %1 %2").arg(qtResourcesPath).arg(outLibexecPath);
+        //QString cpTranslations2 = QString::fromLatin1("cp -rfL %1 %2").arg(qtTranslationsPath).arg(outLibexecPath);
+        qDebug() << cpLibexec;
+        qDebug() << cpResources;
+        qDebug() <<cpTranslations;
+        //qDebug() <<cpResources2;
+        //qDebug() <<cpTranslations2;
+        //CmdUtil::execShell(cpResources2,output,error);
+        //CmdUtil::execShell(cpTranslations2,output,error);
+        //CmdUtil::execShell("cp -rfL " + outputPath + "/qt.conf " + outputPath + "/libexec/",output,error);
+        //将libexec/qt.conf 内容替换
+        //制作qt.conf文件
+        QFile qtConfFile(":/qt.conf.template2");
+        qtConfFile.open(QFile::OpenModeFlag::ReadOnly);
+        QByteArray qtConfByteArr = qtConfFile.readAll();
+        qtConfFile.close();
+        QFile qtConf(outputPath+"/libexec/qt.conf");
+        qtConf.open(QFile::OpenModeFlag::ReadWrite);
+        qtConf.write(qtConfByteArr);
+        qtConf.close();
+    });
 }
 
 void Packager::setQmlPaths(QStringList qmlPaths)
@@ -113,6 +193,7 @@ bool Packager::getHasExec() const
 void Packager::setHasExec(bool newHasExec)
 {
     hasExec = newHasExec;
+    //packWithWenengine();
 }
 
 const QString &Packager::getThisAppName() const
@@ -307,7 +388,7 @@ void Packager::copyExtraFiles(ArchEnum arch)
     CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%2/librt.so.1 %1").arg(outputPath + "./lib/").arg(archPrefix),output,error);
 }
 
-void Packager::patchelf(ArchEnum arch)
+void Packager::patchelf(ArchEnum arch,QString outputPath,QString appName)
 {
 
     QString ldName,output,error;
@@ -329,9 +410,13 @@ void Packager::patchelf(ArchEnum arch)
     //复制ld-linux-xxx到目录
     //CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath+"./lib/"),output,error);
     CmdUtil::execShell(QString::fromLatin1("cp -rfL /usr/lib/%1/%2 %3").arg(archPrefix).arg(ldName).arg(outputPath),output,error);
+    
+    qDebug() << "output1:" << error;
     CmdUtil::execShell("patchelf --set-rpath ./lib " + outputPath+appName,output,error);
+    qDebug() << "output2:" << error;
     //CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./lib/%1 %2").arg(ldName).arg(outputPath+appName),output,error);
     CmdUtil::execShell(QString::fromLatin1("patchelf --set-interpreter ./%1 %2").arg(ldName).arg(outputPath+appName),output,error);
+    qDebug() << "output3:" << error;
 }
 
 void Packager::makeFiles()
@@ -388,4 +473,27 @@ void Packager::cpExec()
 {
     QString output,error;
     CmdUtil::execShell(QString::fromLatin1("cp -rfL %1 %2").arg(qtDir+"/libexec/").arg(outputPath),output,error);
+}
+
+void Packager::mvSo()
+{
+    QStringList mvSoList;
+    mvSoList << "libdrm*";
+    mvSoList << "libGL*";
+    mvSoList << "libGLdispatch*";
+    mvSoList << "libGLX*";
+    mvSoList << "libGLX_mesa*";
+    mvSoList << "libpciaccess*";
+    mvSoList << "libudev.so*";
+    mvSoList << "libusbmuxd*";
+    mvSoList << "libX11.so*";
+    mvSoList << "libX11-xcb.so*";
+    mvSoList << "radeonsi_dri*";
+    mvSoList << "libxkbcommon-x11*";
+    QString output,error;
+    for (auto &&str : mvSoList)
+    {
+        CmdUtil::execShell(QString::fromLatin1("mv %1 %2").arg(outputPath + "lib/"+str).arg(outputPath+"lib/opt/"),output,error);
+    }
+    
 }

@@ -25,7 +25,9 @@ public:
 
     bool getHasExec() const;
     void setHasExec(bool newHasExec);
-
+signals:
+    void exitSignal();
+    void execWebengine();
 private:
     QStringList qmlPaths;
     QString thisAppName;
@@ -33,8 +35,10 @@ private:
     QString appName;
     QString qtLibsDir;
     QString qtDir;
+    QString qtDataPath;
     QSharedPointer<QSet<QString>> soPaths;
-    QString outputPath;
+    QString outputPath,outLibexecPath,outResourcesPath,outTranslationsPath,outResourcesPath2,outTranslationsPath2;
+    QString qtLibexecPath,qtResourcesPath,qtTranslationsPath;
     bool hasExec;
 
     const QString &getAppName() const;
@@ -62,12 +66,14 @@ private:
     void collectSo(QString plddStr);
     void copySo();
     void copyExtraFiles(ArchEnum arch);
-    void patchelf(ArchEnum arch);
+    void patchelf(ArchEnum arch, QString outputPath, QString appName);
+    
 
     void makeFiles();
     void copyQml();
     void chmodX();
     void cpExec();
+    void mvSo();
 
 signals:
 

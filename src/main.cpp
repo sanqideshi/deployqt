@@ -84,9 +84,10 @@ int main(int argc, char *argv[])
     packager.setQmlPaths(qmlPaths);
 
     if(parser.isSet(execOption)){
-        packager.setHasExec(true);
+        qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox");
+        packager.packWithWenengine();
     }
-
+    
     if(parser.isSet(watchOption)){
         packager.watchPack();
     }else if(parser.isSet(pidOption)){
