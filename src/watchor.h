@@ -3,14 +3,12 @@
 
 #include <QObject>
 
-class Watchor : public QObject
-{
-    Q_OBJECT
+class Watchor : public QObject {
+  Q_OBJECT
 public:
-    explicit Watchor(QObject *parent = nullptr);
+  explicit Watchor(QObject *parent = nullptr);
 
 signals:
-
 };
 
 #endif // WATCHOR_H

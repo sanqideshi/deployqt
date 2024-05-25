@@ -4,18 +4,18 @@
 #include <QObject>
 #include <QThread>
 
-class CollectThread:public QThread
-{
-    Q_OBJECT
+class CollectThread : public QThread {
+  Q_OBJECT
 public:
-    explicit CollectThread();
-    bool getFlag() const;
-    void setFlag(bool newFlag);
+  explicit CollectThread();
+  bool getFlag() const;
+  void setFlag(bool newFlag);
 signals:
-    void collect();
+  void collect();
+
 private:
-    void run() override;
-    bool flag;
+  void run() override;
+  bool flag;
 };
 
 #endif // COLLECTTHREAD_H
