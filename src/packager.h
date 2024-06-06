@@ -9,7 +9,8 @@
 #include <QSet>
 #include <QSharedPointer>
 #include <qmutex.h>
-class Packager : public QObject {
+class Packager : public QObject
+{
   Q_OBJECT
 public:
   explicit Packager(QFileInfo appPath, QFileInfo qmakePath, QObject *parent = nullptr);
@@ -29,7 +30,7 @@ signals:
   void execWebengine();
 
 private:
-    QMutex mutex;
+  QMutex mutex;
   QStringList qmlPaths;
   QString thisAppName;
   QFileInfo appPath;
@@ -41,7 +42,7 @@ private:
   QSharedPointer<QSet<QString>> soPaths;
   QString outputPath, outLibexecPath, outResourcesPath, outTranslationsPath,
       outResourcesPath2, outTranslationsPath2;
-  QString qtLibexecPath, qtResourcesPath, qtTranslationsPath,qtPluginsPath;
+  QString qtLibexecPath, qtResourcesPath, qtTranslationsPath, qtPluginsPath;
   bool hasExec;
 
   const QString &getAppName() const;
@@ -77,7 +78,7 @@ private:
   void chownToUser();
   void removeDebugFiles();
   void initVars(QFileInfo qmakePath);
-  signals:
+signals:
 };
 
 #endif // PACKAGER_H

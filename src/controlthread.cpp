@@ -6,16 +6,20 @@ bool ControlThread::getIsExit() const { return isExit; }
 
 void ControlThread::setIsExit(bool newIsExit) { isExit = newIsExit; }
 
-void ControlThread::run() {
+void ControlThread::run()
+{
   QTextStream qin(stdin);
   QString qstr;
-  while (1) {
+  while (1)
+  {
     qstr = qin.readLine();
-    if (qstr == "stop") {
+    if (qstr == "stop")
+    {
       // setIsExit(true);
       emit mstop();
     }
-    if (qstr == "exit") {
+    if (qstr == "exit")
+    {
       // setIsExit(true);
       emit mexit();
       break;

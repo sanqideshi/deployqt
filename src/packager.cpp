@@ -44,12 +44,18 @@ void Packager::initVars(QFileInfo qmakePath)
     for (auto &&str : arr)
     {
         QStringList qtArr = str.split(":");
-        if (str.contains("QT_INSTALL_ARCHDATA")) qtDir = qtArr[1];
-        if (str.contains("QT_INSTALL_DATA")) qtDataPath = qtArr[1];
-        if (str.contains("QT_INSTALL_LIBS")) qtLibsDir = qtArr[1];
-        if (str.contains("QT_INSTALL_LIBEXECS")) qtLibexecPath = qtArr[1];
-        if (str.contains("QT_INSTALL_PLUGINS")) qtPluginsPath = qtArr[1];
-        if (str.contains("QT_INSTALL_TRANSLATIONS")) qtTranslationsPath = qtArr[1];
+        if (str.contains("QT_INSTALL_ARCHDATA"))
+            qtDir = qtArr[1];
+        if (str.contains("QT_INSTALL_DATA"))
+            qtDataPath = qtArr[1];
+        if (str.contains("QT_INSTALL_LIBS"))
+            qtLibsDir = qtArr[1];
+        if (str.contains("QT_INSTALL_LIBEXECS"))
+            qtLibexecPath = qtArr[1];
+        if (str.contains("QT_INSTALL_PLUGINS"))
+            qtPluginsPath = qtArr[1];
+        if (str.contains("QT_INSTALL_TRANSLATIONS"))
+            qtTranslationsPath = qtArr[1];
     }
     qtResourcesPath = qtDataPath + "/resources";
 }
@@ -74,9 +80,9 @@ void Packager::pathPack()
 
     chmodX();
     mvSo();
-    //emit execWebengine();
-    // emit exitSignal();
-    // QCoreApplication::exit(0);
+    // emit execWebengine();
+    //  emit exitSignal();
+    //  QCoreApplication::exit(0);
 }
 
 void Packager::watchPack()
