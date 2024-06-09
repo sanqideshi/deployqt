@@ -1,0 +1,2 @@
+# deployqt
+deploy qt all
