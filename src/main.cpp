@@ -34,10 +34,9 @@ int main(int argc, char *argv[]) {
                                 "设置app位置", "app path");
   parser.addOption(pathOption);
 
-  QCommandLineOption qmakeOption(QStringList() << "qmake",
-                                "设置qmake位置", "qmake path");
+  QCommandLineOption qmakeOption(QStringList() << "qmake", "设置qmake位置",
+                                 "qmake path");
   parser.addOption(qmakeOption);
-
 
   QCommandLineOption pidOption(QStringList() << "P"
                                              << "pid",
@@ -59,7 +58,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   if (!parser.isSet(qmakeOption)) {
-    qDebug() << "请输入必要的参数，如：--path /your/app/path --qmake /your/qmake/path";
+    qDebug() << "请输入必要的参数，如：--path /your/app/path --qmake "
+                "/your/qmake/path";
     app.exit();
     return 0;
   }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  Packager packager(appPath,qmakePath);
+  Packager packager(appPath, qmakePath);
   QStringList qmlPaths = parser.values(qmlOption);
   packager.setQmlPaths(qmlPaths);
 
