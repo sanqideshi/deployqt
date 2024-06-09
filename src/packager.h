@@ -9,11 +9,11 @@
 #include <QSet>
 #include <QSharedPointer>
 #include <qmutex.h>
-class Packager : public QObject
-{
+class Packager : public QObject {
   Q_OBJECT
 public:
-  explicit Packager(QFileInfo appPath, QFileInfo qmakePath, QObject *parent = nullptr);
+  explicit Packager(QFileInfo appPath, QFileInfo qmakePath,
+                    QObject *parent = nullptr);
   void pathPack();
   void watchPack();
   void watchPack(QString pid);
